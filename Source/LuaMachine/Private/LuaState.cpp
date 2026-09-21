@@ -56,16 +56,17 @@ FLuaValue ULuaState::RequireLuaBlueprintPackage(const FString& Name, TSubclassOf
 			FromLuaValue(LuaPair.Value, LuaBlueprintPackageInstance);
 			SetField(-2, TCHAR_TO_ANSI(*LuaPair.Key));
 		}
-		SetField(-2, TCHAR_TO_ANSI(*Name));
-
-		// fill package.loaded
-		GetField(-1, "package");
+		// fill package.loaded while the package table is still on the stack: [G, T]
+		GetField(-2, "package");
 		GetField(-1, "loaded");
+		// [G, T, package, loaded, T]
 		PushValue(-3);
 		SetField(-2, TCHAR_TO_ANSI(*Name));
-		// pop package, loaded and value
-		Pop(3);
+		// pop package and loaded, back to [G, T]
+		Pop(2);
 
+		// G[Name] = T, consumes the package table
+		SetField(-2, TCHAR_TO_ANSI(*Name));
 
 		// pop global table
 		Pop();
